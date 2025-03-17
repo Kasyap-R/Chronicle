@@ -8,7 +8,7 @@ mod compression;
 mod hashing;
 mod initialize;
 mod objects;
-mod paths;
+pub mod paths;
 mod staging;
 
 pub fn process_command() -> Result<()> {
@@ -16,9 +16,10 @@ pub fn process_command() -> Result<()> {
 
     ensure_valid_repo_state(&user_args)?;
 
+    // Always canonicalize paths before using as args
     match user_args.command {
         Commands::Init => initialize::init_chronicle_repo()?,
-        Commands::Add { path } => staging::handle_staging(&path)?,
+        Commands::Add { path } => staging::handle_staging(&path.canonicalize()?)?,
         Commands::Commit => (),
         Commands::Branch(_branch_commands) => (),
     }

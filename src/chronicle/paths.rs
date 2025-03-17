@@ -6,3 +6,5 @@ pub const HEADS_PATH: &str = ".chronicle/refs/heads/";
 pub const REMOTES_PATH: &str = ".chronicle/refs/remotes/";
 pub const TAGS_PATH: &str = ".chronicle/refs/tags/";
 pub const OBJECTS_PATH: &str = ".chronicle/objects/";
+pub const IGNORE_PATH: &str = ".chronignore";
+pub const CHRON_DIR: &str = ".chronicle";

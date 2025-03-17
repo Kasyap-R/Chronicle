@@ -19,4 +19,13 @@ impl IndexEntry {
             last_modified,
         }
     }
+
+    pub fn in_vec(&self, vec: &Vec<Self>) -> Option<usize> {
+        for (idx, entry) in vec.iter().enumerate() {
+            if entry.path == self.path {
+                return Some(idx);
+            }
+        }
+        return None;
+    }
 }
