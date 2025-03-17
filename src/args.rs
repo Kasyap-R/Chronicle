@@ -20,7 +20,7 @@ pub enum Commands {
     /// Stage unsaved changes
     Add {
         /// Path to directory/file to save changes from
-        directory: PathBuf,
+        path: PathBuf,
     },
     /// Create a snapshot of the repository's state
     Commit,

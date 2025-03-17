@@ -6,16 +6,17 @@ use std::path::Path;
 
 mod hashing;
 mod initialize;
+mod paths;
 mod staging;
 
 pub fn process_command() -> Result<()> {
     let user_args = UserArgs::parse();
 
-    ensure_repo_state_matches_command(&user_args)?;
+    ensure_valid_repo_state(&user_args)?;
 
     match user_args.command {
         Commands::Init => initialize::init_chronicle_repo()?,
-        Commands::Add { directory: _ } => (),
+        Commands::Add { path } => staging::handle_staging(&path)?,
         Commands::Commit => (),
         Commands::Branch(_branch_commands) => (),
     }
@@ -23,7 +24,7 @@ pub fn process_command() -> Result<()> {
     Ok(())
 }
 
-fn ensure_repo_state_matches_command(user_args: &UserArgs) -> Result<()> {
+fn ensure_valid_repo_state(user_args: &UserArgs) -> Result<()> {
     let repo_exists = git_repo_exists();
     let command_is_init = matches!(user_args.command, Commands::Init);
 
