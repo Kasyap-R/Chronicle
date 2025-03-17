@@ -1,20 +1,22 @@
 use super::{hashing, paths};
 use anyhow::Result;
+use flate2::{Compression, write::ZlibEncoder};
 use std::{
     fs::{self, File},
-    io::Write,
+    io::{Read, Write},
     path::{Path, PathBuf},
 };
 
-pub fn create_blob(file: &mut File) -> Result<()> {
-    let hash = hashing::get_file_hash(file)?;
+pub fn create_blob(base_file_path: &Path) -> Result<()> {
+    let mut base_file = File::open(base_file_path)?;
+    let hash = hashing::get_file_hash(&mut base_file)?;
 
     if !blob_exists(&hash) {
         let (directory_path, file_path) = get_blob_paths(&hash);
         if !directory_path.exists() {
             fs::create_dir(directory_path)?;
         }
-        write_blob(&hash, &file_path)?;
+        write_blob(base_file_path, &file_path)?;
     }
 
     Ok(())
@@ -43,10 +45,31 @@ fn get_blob_paths(hash: &str) -> (PathBuf, PathBuf) {
     (directory_path, file_path)
 }
 
-fn write_blob(hash: &str, file_path: &Path) -> Result<()> {
-    let mut file = File::create_new(file_path)?;
-    // You're supposed to compress the file with zlib and write corresponding bytes
-    // Also we need the prefix first that ends with a null terminator
-    file.write_all(hash.as_bytes())?;
+fn write_blob(base_file_path: &Path, object_file_path: &Path) -> Result<()> {
+    let mut object_file = File::create_new(object_file_path)?;
+    let mut base_file = File::open(base_file_path)?;
+    let prefix = generate_blob_prefix(base_file_path)?;
+    let compressed_data = compress_file(&mut base_file)?;
+    object_file.write_all(&prefix)?;
+    object_file.write_all(&compressed_data)?;
     Ok(())
+}
+
+fn generate_blob_prefix(base_file_path: &Path) -> Result<Vec<u8>> {
+    let metadata = fs::metadata(base_file_path)?;
+    let num_bytes = metadata.len();
+    let mut prefix = Vec::new();
+    prefix.extend_from_slice(b"blob ");
+    prefix.extend_from_slice(num_bytes.to_string().as_bytes());
+    prefix.push(0); // null terminator
+    Ok(prefix)
+}
+
+fn compress_file(file: &mut File) -> Result<Vec<u8>> {
+    let mut file_contents = Vec::new();
+    file.read_to_end(&mut file_contents)?;
+    let mut encoder = ZlibEncoder::new(Vec::new(), Compression::default());
+    encoder.write_all(&file_contents)?;
+    let compressed_data = encoder.finish()?;
+    Ok(compressed_data)
 }

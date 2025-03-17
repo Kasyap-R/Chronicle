@@ -53,7 +53,7 @@ fn stage_file(file_path: &Path) -> Result<()> {
         last_modified,
     ))?;
 
-    objects::create_blob(&mut file)?;
+    objects::create_blob(file_path)?;
 
     Ok(())
 }
