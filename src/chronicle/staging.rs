@@ -7,6 +7,7 @@ use std::{
 use anyhow::{Context, Result};
 use index::IndexEntry;
 
+use super::objects;
 use super::{hashing, paths};
 
 mod index;
@@ -40,15 +41,20 @@ fn stage_directory(dir_path: &Path) -> Result<()> {
 fn stage_file(file_path: &Path) -> Result<()> {
     let mut file = File::open(file_path)?;
     let metadata = fs::metadata(file_path)?;
-    let hash = get_file_hash(&mut file)?;
+
+    let hash = hashing::get_file_hash(&mut file)?;
     let file_size = metadata.len();
     let last_modified = metadata.modified()?;
+
     add_index_entry(IndexEntry::new(
         file_path.to_path_buf(),
         hash,
         file_size,
         last_modified,
     ))?;
+
+    objects::create_blob(&mut file)?;
+
     Ok(())
 }
 
@@ -72,11 +78,4 @@ fn add_index_entry(entry: IndexEntry) -> Result<()> {
     index_file.set_len(0).context("Failed to clear file")?;
     index_file.write_all(json_string.as_bytes())?;
     Ok(())
-}
-
-fn get_file_hash(file: &mut File) -> Result<String> {
-    let mut file_contents = String::new();
-    file.read_to_string(&mut file_contents)?;
-    let hash = hashing::sha1_hash(&file_contents)?;
-    Ok(hash)
 }

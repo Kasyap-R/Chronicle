@@ -6,6 +6,7 @@ use std::path::Path;
 
 mod hashing;
 mod initialize;
+mod objects;
 mod paths;
 mod staging;
 
