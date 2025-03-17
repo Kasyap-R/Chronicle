@@ -7,7 +7,9 @@ use std::{
 use anyhow::{Context, Result};
 use index::IndexEntry;
 
-use super::objects;
+use crate::utils;
+
+use super::objects::blob;
 use super::{hashing, paths};
 
 mod index;
@@ -21,12 +23,12 @@ pub fn handle_staging(path: &Path) -> Result<()> {
     } else {
         stage_directory(path)?;
     }
-
     Ok(())
 }
 
 fn stage_directory(dir_path: &Path) -> Result<()> {
-    let entries = fs::read_dir(dir_path)?;
+    let entries = fs::read_dir(dir_path)
+        .context("Expected directory path as argument for stage_directory.")?;
     for entry in entries.flatten() {
         let path = entry.path();
         if path.is_dir() {
@@ -43,7 +45,7 @@ fn stage_file(file_path: &Path) -> Result<()> {
     let metadata = fs::metadata(file_path)?;
 
     let hash = hashing::get_file_hash(&mut file)?;
-    let file_size = metadata.len();
+    let file_size = utils::get_file_size(file_path)?;
     let last_modified = metadata.modified()?;
 
     add_index_entry(IndexEntry::new(
@@ -53,7 +55,7 @@ fn stage_file(file_path: &Path) -> Result<()> {
         last_modified,
     ))?;
 
-    objects::create_blob(file_path)?;
+    blob::create_blob(file_path)?;
 
     Ok(())
 }

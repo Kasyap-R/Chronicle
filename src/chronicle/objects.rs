@@ -1,41 +1,42 @@
+use crate::utils;
+
 use super::{hashing, paths};
-use anyhow::Result;
-use flate2::{Compression, write::ZlibEncoder};
-use std::{
-    fs::{self, File},
-    io::{Read, Write},
-    path::{Path, PathBuf},
-};
+use std::path::PathBuf;
 
-pub fn create_blob(base_file_path: &Path) -> Result<()> {
-    let mut base_file = File::open(base_file_path)?;
-    let hash = hashing::get_file_hash(&mut base_file)?;
+pub mod blob;
 
-    if !blob_exists(&hash) {
-        let (directory_path, file_path) = get_blob_paths(&hash);
-        if !directory_path.exists() {
-            fs::create_dir(directory_path)?;
-        }
-        write_blob(base_file_path, &file_path)?;
-    }
-
-    Ok(())
+enum ObjectType {
+    Blob,
+    Commit,
+    Tree,
+    Tag,
 }
 
-fn blob_exists(hash: &str) -> bool {
-    let (_, file_path) = get_blob_paths(hash);
+impl ObjectType {
+    fn as_str(&self) -> &'static str {
+        match self {
+            Self::Blob => "blob",
+            Self::Commit => "commit",
+            Self::Tag => "tag",
+            Self::Tree => "tree",
+        }
+    }
+}
+
+fn object_exists(hash: &str) -> bool {
+    let (_, file_path) = get_object_paths(hash);
     file_path.exists() && file_path.is_file()
 }
 
-fn split_blob_hash(hash: &str) -> (&str, &str) {
+fn split_object_hash(hash: &str) -> (&str, &str) {
     assert!(hash.len() == 40);
     let directory_name = &hash[0..2];
     let file_name = &hash[2..];
     return (directory_name, file_name);
 }
 
-fn get_blob_paths(hash: &str) -> (PathBuf, PathBuf) {
-    let (directory_name, file_name) = split_blob_hash(hash);
+fn get_object_paths(hash: &str) -> (PathBuf, PathBuf) {
+    let (directory_name, file_name) = split_object_hash(hash);
 
     let directory_path: PathBuf = [paths::OBJECTS_PATH, directory_name].iter().collect();
     let file_path: PathBuf = [directory_path.to_str().unwrap(), file_name]
@@ -45,31 +46,10 @@ fn get_blob_paths(hash: &str) -> (PathBuf, PathBuf) {
     (directory_path, file_path)
 }
 
-fn write_blob(base_file_path: &Path, object_file_path: &Path) -> Result<()> {
-    let mut object_file = File::create_new(object_file_path)?;
-    let mut base_file = File::open(base_file_path)?;
-    let prefix = generate_blob_prefix(base_file_path)?;
-    let compressed_data = compress_file(&mut base_file)?;
-    object_file.write_all(&prefix)?;
-    object_file.write_all(&compressed_data)?;
-    Ok(())
-}
-
-fn generate_blob_prefix(base_file_path: &Path) -> Result<Vec<u8>> {
-    let metadata = fs::metadata(base_file_path)?;
-    let num_bytes = metadata.len();
+fn generate_object_prefix(obj_type: &ObjectType, base_file_size: u64) -> Vec<u8> {
     let mut prefix = Vec::new();
-    prefix.extend_from_slice(b"blob ");
-    prefix.extend_from_slice(num_bytes.to_string().as_bytes());
+    prefix.extend_from_slice(obj_type.as_str().as_bytes());
+    prefix.extend_from_slice(base_file_size.to_string().as_bytes());
     prefix.push(0); // null terminator
-    Ok(prefix)
-}
-
-fn compress_file(file: &mut File) -> Result<Vec<u8>> {
-    let mut file_contents = Vec::new();
-    file.read_to_end(&mut file_contents)?;
-    let mut encoder = ZlibEncoder::new(Vec::new(), Compression::default());
-    encoder.write_all(&file_contents)?;
-    let compressed_data = encoder.finish()?;
-    Ok(compressed_data)
+    prefix
 }
