@@ -17,6 +17,7 @@ pub fn get_ignored_paths() -> Result<HashSet<PathBuf>> {
         PathBuf::from(paths::CHRON_DIR).canonicalize()?,
         PathBuf::from(paths::IGNORE_PATH).canonicalize()?,
     ]);
+
     let mut file = File::open(paths::IGNORE_PATH)?;
     let mut file_contents = String::new();
     file.read_to_string(&mut file_contents)?;

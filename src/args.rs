@@ -23,7 +23,10 @@ pub enum Commands {
         path: PathBuf,
     },
     /// Create a snapshot of the repository's state
-    Commit,
+    Commit {
+        #[arg(short, long)]
+        message: String,
+    },
     /// Manage branches
     Branch(BranchCommands),
 }

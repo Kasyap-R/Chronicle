@@ -1,4 +1,5 @@
 use crate::args::{Commands, UserArgs};
+use objects::commit;
 
 use anyhow::{Result, anyhow};
 use clap::Parser;
@@ -19,8 +20,8 @@ pub fn process_command() -> Result<()> {
     // Always canonicalize paths before using as args
     match user_args.command {
         Commands::Init => initialize::init_chronicle_repo()?,
-        Commands::Add { path } => staging::handle_staging(&path.canonicalize()?)?,
-        Commands::Commit => (),
+        Commands::Add { path } => staging::handle_staging(&path)?,
+        Commands::Commit { message } => commit::create_commit(message)?,
         Commands::Branch(_branch_commands) => (),
     }
 

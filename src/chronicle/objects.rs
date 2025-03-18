@@ -1,9 +1,11 @@
 use crate::utils;
 
-use super::{hashing, paths};
+use super::paths;
 use std::path::PathBuf;
 
 pub mod blob;
+pub mod commit;
+pub mod tree;
 
 enum ObjectType {
     Blob,
