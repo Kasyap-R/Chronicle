@@ -21,7 +21,7 @@ pub fn process_command() -> Result<()> {
     match user_args.command {
         Commands::Init => initialize::init_chronicle_repo()?,
         Commands::Add { path } => staging::handle_staging(&path)?,
-        Commands::Commit { message } => commit::create_commit(message)?,
+        Commands::Commit { message } => commit::handle_commit(message)?,
         Commands::Branch(_branch_commands) => (),
     }
 

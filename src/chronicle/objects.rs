@@ -25,6 +25,10 @@ impl ObjectType {
     }
 }
 
+trait ChronObject {
+    fn to_obj_bytes(&self) -> Vec<u8>;
+}
+
 fn object_exists(hash: &str) -> bool {
     let (_, file_path) = get_object_paths(hash);
     file_path.exists() && file_path.is_file()

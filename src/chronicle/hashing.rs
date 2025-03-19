@@ -13,16 +13,15 @@ pub fn hash_file(file_path: &Path) -> Result<String> {
     let mut file = File::open(file_path)?;
     let mut file_contents = String::new();
     file.read_to_string(&mut file_contents)?;
-    let hash = sha1_hash(&file_contents).context(format!(
+    hash_string(file_path, &file_contents)
+}
+
+pub fn hash_string(file_path: &Path, string: &str) -> Result<String> {
+    let hash = sha1_hash(&string).context(format!(
         "Failed to get hash for the following file while staging: {}",
         file_path
             .to_str()
             .unwrap_or("Failed to retrieve file path.")
     ))?;
-    Ok(hash)
-}
-
-pub fn hash_string(string: &str) -> Result<String> {
-    let hash = sha1_hash(&string)?;
     Ok(hash)
 }
