@@ -1,4 +1,5 @@
 use crate::chronicle::{
+    ignore::FilteredDirIter,
     paths,
     staging::index::{self},
 };
@@ -6,11 +7,10 @@ use crate::chronicle::{
 use anyhow::Result;
 use std::{
     collections::{HashMap, HashSet},
-    fs,
     path::{Path, PathBuf},
 };
 
-type PathHashes = HashMap<PathBuf, String>; // Alias for HashMap<PathBuf, String>
+type PathHashes = HashMap<PathBuf, String>;
 
 // Read the index, and generate the corresponding tree
 // Then generate the commit which should just point to said tree
@@ -30,6 +30,7 @@ fn prev_commit_file_hashes() -> Result<PathHashes> {
     Ok(HashMap::new())
 }
 
+// Generates a map of tree hashes by reading the previous commit (stored in head)
 fn prev_commit_tree_hashes() -> Result<PathHashes> {
     Ok(HashMap::new())
 }
@@ -51,7 +52,7 @@ fn has_dir_changed(
     last_commited: &PathHashes,
     changed_dirs: &mut HashSet<PathBuf>,
 ) -> Result<bool> {
-    let fs_entries = fs::read_dir(dir_path)?;
+    let fs_entries = FilteredDirIter::new(dir_path)?;
     for fs_entry in fs_entries {
         let fs_entry = fs_entry?;
         let path = fs_entry.path();
@@ -72,13 +73,13 @@ fn has_dir_changed(
 }
 
 fn file_has_changed(path: &Path, staged: &PathHashes, last_commited: &PathHashes) -> bool {
-    // File was previously committed (implying it was previously staged) but now it is unstaged (git rm)
+    // Previously staged and committed but now unstaged
     if !staged.contains_key(path) && last_commited.contains_key(path) {
         return true;
     }
 
-    // File was previously unstaged but is now staged for this commit
-    if staged.contains_key(path) && last_commited.contains_key(path) {
+    // Previously unstaged but now staged
+    if staged.contains_key(path) && !last_commited.contains_key(path) {
         return true;
     }
 
@@ -88,5 +89,6 @@ fn file_has_changed(path: &Path, staged: &PathHashes, last_commited: &PathHashes
         return false;
     }
 
-    staged.get(path).unwrap() == last_commited.get(path).unwrap()
+    // If the file's hash in unchanged, return false
+    staged.get(path).unwrap() != last_commited.get(path).unwrap()
 }

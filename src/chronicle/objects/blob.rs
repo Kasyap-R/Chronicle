@@ -29,5 +29,6 @@ fn write_blob(base_file_path: &Path, object_file_path: &Path) -> Result<()> {
 
     object_file.write_all(&prefix)?;
     object_file.write_all(&compressed_data)?;
+
     Ok(())
 }

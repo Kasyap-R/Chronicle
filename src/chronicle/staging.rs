@@ -1,11 +1,8 @@
-use super::hashing;
 use super::objects::blob;
+use super::{hashing, ignore};
+use crate::chronicle::ignore::FilteredDirIter;
 use crate::utils::{self};
-use std::{
-    collections::HashSet,
-    fs::{self},
-    path::{Path, PathBuf},
-};
+use std::path::Path;
 
 use anyhow::Result;
 use index::IndexEntry;
@@ -14,39 +11,34 @@ pub mod index;
 
 // TODO: add support for git rm (which just removes files from the index)
 
-// TODO: Stop normalizing and support a more freeform .chroignore where for example, target/ would
-// ignore ANY paths with target/ in them
-
+// TODO: Make this func less jank, there needs to be a cleaner way to avoid adding at all if the
+// path the user passed is ignored
 pub fn handle_staging(path: &Path) -> Result<()> {
-    let ignored_paths = utils::get_ignored_paths()?;
-    // Normalize paths before comparison to avoid situations like when ./target is viewed
-    // differently than target/
-    if ignored_paths.contains(&path.canonicalize()?) {
+    if ignore::get_ignored_paths().contains(&path.canonicalize()?) {
         return Ok(());
     }
-
-    if fs::metadata(path)?.is_file() {
-        stage_file(&path)?;
-    } else {
-        stage_directory(path, &ignored_paths)?;
-    }
-
+    stage_files(&path)?;
     Ok(())
 }
 
-fn stage_directory(dir_path: &Path, ignored: &HashSet<PathBuf>) -> Result<()> {
-    let fs_entries = fs::read_dir(dir_path)?;
-    for entry in fs_entries.flatten() {
-        let path = entry.path();
-        if ignored.contains(&path.canonicalize()?) {
-            continue;
-        }
-        if path.is_dir() {
-            stage_directory(&path, ignored)?;
-        } else {
-            stage_file(&path)?;
-        }
+fn stage_files(curr_path: &Path) -> Result<()> {
+    if curr_path.is_file() {
+        stage_file(&curr_path)?;
+        return Ok(());
     }
+
+    println!(
+        "Staging files in directory: {}",
+        curr_path.to_str().unwrap()
+    );
+
+    let entries = FilteredDirIter::new(curr_path)?;
+    for entry in entries {
+        let entry = entry?;
+        let new_path = entry.path();
+        stage_files(&new_path)?
+    }
+
     Ok(())
 }
 

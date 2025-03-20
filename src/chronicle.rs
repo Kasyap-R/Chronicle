@@ -7,6 +7,7 @@ use std::path::Path;
 
 mod compression;
 mod hashing;
+mod ignore;
 mod initialize;
 mod objects;
 pub mod paths;
