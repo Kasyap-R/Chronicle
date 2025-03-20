@@ -1,7 +1,8 @@
 use crate::utils;
 
 use super::paths;
-use std::path::PathBuf;
+use anyhow::Result;
+use std::{fs, path::PathBuf};
 
 pub mod blob;
 pub mod commit;
@@ -26,12 +27,20 @@ impl ObjectType {
 }
 
 trait ChronObject {
-    fn to_obj_bytes(&self) -> Vec<u8>;
+    fn to_obj_string(&self) -> String;
 }
 
 fn object_exists(hash: &str) -> bool {
     let (_, file_path) = get_object_paths(hash);
     file_path.exists() && file_path.is_file()
+}
+
+fn ensure_obj_dir_exists(hash: &str) -> Result<()> {
+    let (directory_path, _) = get_object_paths(&hash);
+    if !directory_path.exists() {
+        fs::create_dir(directory_path)?;
+    }
+    Ok(())
 }
 
 fn split_object_hash(hash: &str) -> (&str, &str) {
@@ -52,10 +61,10 @@ fn get_object_paths(hash: &str) -> (PathBuf, PathBuf) {
     (directory_path, file_path)
 }
 
-fn generate_object_prefix(obj_type: &ObjectType, base_file_size: u64) -> Vec<u8> {
-    let mut prefix = Vec::new();
-    prefix.extend_from_slice(obj_type.as_str().as_bytes());
-    prefix.extend_from_slice(base_file_size.to_string().as_bytes());
-    prefix.push(0); // null terminator
+fn generate_object_prefix(obj_type: ObjectType, base_file_size: u64) -> String {
+    let mut prefix = String::new();
+    prefix.push_str(obj_type.as_str());
+    prefix.push_str(&base_file_size.to_string());
+    prefix.push('\0'); // null terminator
     prefix
 }

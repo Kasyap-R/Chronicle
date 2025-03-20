@@ -15,6 +15,8 @@ pub struct FilteredDirIter<'a> {
 
 impl<'a> FilteredDirIter<'a> {
     pub fn new(path: &Path) -> Result<Self> {
+        assert!(path.is_dir());
+
         Ok(FilteredDirIter {
             inner: fs::read_dir(path)?,
             ignored: get_ignored_paths(),

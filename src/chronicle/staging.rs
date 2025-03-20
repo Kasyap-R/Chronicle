@@ -34,8 +34,7 @@ fn stage_files(curr_path: &Path) -> Result<()> {
 
     let entries = FilteredDirIter::new(curr_path)?;
     for entry in entries {
-        let entry = entry?;
-        let new_path = entry.path();
+        let new_path = entry?.path();
         stage_files(&new_path)?
     }
 
