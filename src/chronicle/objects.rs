@@ -1,6 +1,6 @@
 use crate::utils;
 
-use super::{compression, hashing};
+use super::{compression, hashing, prefix::Prefix};
 use anyhow::Result;
 use std::{
     fs::{self, File},
@@ -41,8 +41,18 @@ impl ObjectType {
 }
 
 trait ChronObject {
+    const OBJ_TYPE: ObjectType;
+
     fn read_obj_from(obj_path: &Path) -> Self;
-    fn to_obj_string(&self) -> String;
+    fn obj_body(&self) -> String;
+
+    fn to_obj_string(&self) -> String {
+        let obj_body = self.obj_body();
+        let obj_len: u64 = obj_body.as_bytes().len().try_into().unwrap();
+        let prefix = Prefix::new(Self::OBJ_TYPE, obj_len).to_string();
+        prefix + &obj_body
+    }
+
     fn write_obj(&self) -> Result<String> {
         let obj_string = self.to_obj_string();
         let obj_hash = hashing::hash_string(&obj_string)?;

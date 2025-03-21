@@ -1,0 +1,138 @@
+{
+  "./src/chronicle/hashing.rs": {
+    "last_modified": {
+      "secs_since_epoch": 1742284164,
+      "nanos_since_epoch": 250375747
+    },
+    "hash": "9efab59197c64ff7678e8addab241ef43aecb2b6",
+    "file_size": 850
+  },
+  "./src/chronicle/paths.rs": {
+    "last_modified": {
+      "secs_since_epoch": 1742369293,
+      "nanos_since_epoch": 291346150
+    },
+    "hash": "da3069f6f3ac82a446c15e5f0445b873a847a52d",
+    "file_size": 553
+  },
+  "./src/chronicle/objects/blob.rs": {
+    "last_modified": {
+      "secs_since_epoch": 1742455723,
+      "nanos_since_epoch": 624061366
+    },
+    "hash": "bd02039600c81b40d67b0385f937763e7e400397",
+    "file_size": 1160
+  },
+  "./src/chronicle/objects/tree.rs": {
+    "last_modified": {
+      "secs_since_epoch": 1742454722,
+      "nanos_since_epoch": 577263077
+    },
+    "hash": "0c6af75ea03cbe7690e4146b125700d20ab49bdb",
+    "file_size": 1211
+  },
+  "./src/chronicle/staging.rs": {
+    "last_modified": {
+      "secs_since_epoch": 1742455796,
+      "nanos_since_epoch": 805141886
+    },
+    "hash": "06f514c4c5b4cc6a31a5045fe628bd81b08c77a0",
+    "file_size": 1676
+  },
+  "./src/chronicle.rs": {
+    "last_modified": {
+      "secs_since_epoch": 1742451604,
+      "nanos_since_epoch": 442608364
+    },
+    "hash": "ab5a8dfeed3969cfeeeeebb2ec236258a6bbfb4d",
+    "file_size": 1243
+  },
+  "./Cargo.toml": {
+    "last_modified": {
+      "secs_since_epoch": 1742179984,
+      "nanos_since_epoch": 553474426
+    },
+    "hash": "a47b93a4ef2798a5ae9343a91bf9f6a1a039e6b0",
+    "file_size": 263
+  },
+  "./src/main.rs": {
+    "last_modified": {
+      "secs_since_epoch": 1742451598,
+      "nanos_since_epoch": 852317705
+    },
+    "hash": "fdae6702b83d32620a5bb520f8e98f2329f6ba10",
+    "file_size": 132
+  },
+  "./src/chronicle/compression.rs": {
+    "last_modified": {
+      "secs_since_epoch": 1742329759,
+      "nanos_since_epoch": 195214509
+    },
+    "hash": "0c470406da5e645fcddd7f4b9a5d270868d5811e",
+    "file_size": 530
+  },
+  "./src/chronicle/ignore.rs": {
+    "last_modified": {
+      "secs_since_epoch": 1742454419,
+      "nanos_since_epoch": 350848084
+    },
+    "hash": "889a6aebdac23c691de4dd596abdc889036b6e97",
+    "file_size": 2980
+  },
+  "./src/args.rs": {
+    "last_modified": {
+      "secs_since_epoch": 1742276835,
+      "nanos_since_epoch": 254570960
+    },
+    "hash": "7a5f834773c9624e5278585dbc82470dfab9cce8",
+    "file_size": 1038
+  },
+  "./src/chronicle/objects.rs": {
+    "last_modified": {
+      "secs_since_epoch": 1742329426,
+      "nanos_since_epoch": 680623769
+    },
+    "hash": "b6c7828794394ac056b4edc91d9c25bb01dc4c22",
+    "file_size": 1452
+  },
+  "./Cargo.lock": {
+    "last_modified": {
+      "secs_since_epoch": 1742179984,
+      "nanos_since_epoch": 923849821
+    },
+    "hash": "c32a6aade6b3aac3ef7d43b9859c3a5d43ce317f",
+    "file_size": 11570
+  },
+  "./src/utils.rs": {
+    "last_modified": {
+      "secs_since_epoch": 1742451518,
+      "nanos_since_epoch": 451875397
+    },
+    "hash": "c38b55ff9b20a77d82729dba21583faf6da1a73e",
+    "file_size": 1485
+  },
+  "./src/chronicle/initialize.rs": {
+    "last_modified": {
+      "secs_since_epoch": 1742454744,
+      "nanos_since_epoch": 735765987
+    },
+    "hash": "fc08070884480ece541694b5998895ae4bbeb818",
+    "file_size": 892
+  },
+  "./src/chronicle/objects/commit.rs": {
+    "last_modified": {
+      "secs_since_epoch": 1742377357,
+      "nanos_since_epoch": 756397496
+    },
+    "hash": "106c335d3e940ec196584f0480a0ced043961e48",
+    "file_size": 2886
+  },
+  "./src/chronicle/staging/index.rs": {
+    "last_modified": {
+      "secs_since_epoch": 1742369089,
+      "nanos_since_epoch": 383616842
+    },
+    "hash": "f2119e11b2e848ce100a5cbe5c12defa1bbc6373",
+    "file_size": 2742
+  }
+}

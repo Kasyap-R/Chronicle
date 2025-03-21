@@ -16,6 +16,8 @@ impl Commit {
 }
 
 impl ChronObject for Commit {
+    const OBJ_TYPE: ObjectType = ObjectType::Commit;
+
     fn read_obj_from(_obj_path: &Path) -> Self {
         Commit {
             tree_hash: String::new(),
@@ -23,15 +25,12 @@ impl ChronObject for Commit {
         }
     }
 
-    fn to_obj_string(&self) -> String {
-        let mut obj_body = String::from("\n");
+    fn obj_body(&self) -> String {
+        let mut obj_body = String::new();
         let tree_entry = String::from("tree ") + &self.tree_hash + "\n";
         obj_body.push_str(&tree_entry);
-
-        let obj_len: u64 = obj_body.as_bytes().len().try_into().unwrap();
-        let prefix = Prefix::new(ObjectType::Commit, obj_len).to_string();
-
-        prefix + &obj_body
+        obj_body.push_str(&self.message);
+        obj_body
     }
 }
 

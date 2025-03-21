@@ -1,5 +1,3 @@
-use crate::chronicle::prefix::Prefix;
-
 use super::{ChronObject, ObjectType};
 
 use anyhow::Result;
@@ -16,15 +14,13 @@ impl Tree {
 }
 
 impl ChronObject for Tree {
-    fn to_obj_string(&self) -> String {
-        let mut obj_body = String::from("\n");
+    const OBJ_TYPE: ObjectType = ObjectType::Tree;
+    fn obj_body(&self) -> String {
+        let mut obj_body = String::new();
         for entry in &self.entries {
             obj_body.push_str(&entry.to_string());
         }
-
-        let obj_len: u64 = obj_body.as_bytes().len().try_into().unwrap();
-        let prefix = Prefix::new(ObjectType::Tree, obj_len).to_string();
-        prefix + &obj_body
+        obj_body
     }
 
     fn read_obj_from(_obj_path: &Path) -> Self {
