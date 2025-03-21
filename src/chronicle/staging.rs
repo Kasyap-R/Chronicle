@@ -47,14 +47,14 @@ fn stage_file(file_path: &Path) -> Result<()> {
     if index::is_file_in_index(&entry_map, file_path, &mut computed_hash)? {
         return Ok(());
     }
+
     // Ensure the hash is only ever computed once
     let computed_hash = computed_hash.unwrap_or(hashing::hash_file(file_path)?);
 
     let entry = IndexEntry::create_index_entry(file_path, &computed_hash)?;
     entry_map.insert(file_path.to_path_buf(), entry);
+
     index::update_index(&entry_map)?;
-
-    blob::create_blob(file_path, &computed_hash)?;
-
+    blob::create_blob(file_path)?;
     Ok(())
 }

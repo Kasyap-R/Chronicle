@@ -5,12 +5,14 @@ use anyhow::{Result, anyhow};
 use clap::Parser;
 use std::path::Path;
 
+mod commits;
 mod compression;
 mod hashing;
 mod ignore;
 mod initialize;
 mod objects;
 pub mod paths;
+mod prefix;
 mod staging;
 
 pub fn process_command() -> Result<()> {
@@ -21,7 +23,7 @@ pub fn process_command() -> Result<()> {
     match user_args.command {
         Commands::Init => initialize::init_chronicle_repo()?,
         Commands::Add { path } => staging::handle_staging(&path)?,
-        Commands::Commit { message } => commit::handle_commit(message)?,
+        Commands::Commit { message } => commits::handle_commit(message)?,
         Commands::Branch(_branch_commands) => (),
     }
 

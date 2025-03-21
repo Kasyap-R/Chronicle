@@ -72,13 +72,7 @@ fn calc_ignored_paths() -> HashSet<PathBuf> {
         let mut file_contents = String::new();
         if file.read_to_string(&mut file_contents).is_ok() {
             for line in file_contents.lines() {
-                let trimmed = line.trim();
-                // Skip "." and ".."
-                if trimmed == "." || trimmed == ".." {
-                    eprintln!(
-                        "Warning: Ignoring `{}` in .chronignore. These ignores are skipped by chronicle",
-                        trimmed
-                    );
+                if is_invalid_ignore(line) {
                     continue;
                 }
                 let path = Path::new(line);
@@ -90,6 +84,19 @@ fn calc_ignored_paths() -> HashSet<PathBuf> {
     }
 
     ignored_paths
+}
+
+fn is_invalid_ignore(line: &str) -> bool {
+    let trimmed = line.trim();
+    // Skip "." and ".."
+    if trimmed == "." || trimmed == ".." {
+        println!(
+            "Warning: Ignoring `{}` in .chronignore. This will be skipped by chronicle",
+            trimmed
+        );
+        return true;
+    }
+    false
 }
 
 use std::sync::OnceLock;

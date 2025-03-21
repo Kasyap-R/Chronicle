@@ -1,25 +1,38 @@
-use crate::chronicle::compression;
+use crate::chronicle::prefix::Prefix;
 
 use super::*;
 use anyhow::Result;
-use std::{fs::File, io::Write, path::Path};
+use std::path::Path;
 
-pub fn create_blob(base_file_path: &Path, hash: &str) -> Result<()> {
-    ensure_obj_dir_exists(hash);
-    let (_, obj_file_path) = get_object_paths(&hash);
-    write_blob(base_file_path, &obj_file_path)?;
-    Ok(())
+struct Blob {
+    contents: String,
 }
 
-fn write_blob(base_file_path: &Path, object_file_path: &Path) -> Result<()> {
-    let mut object_file = File::create_new(object_file_path)?;
-    let mut base_file = File::open(base_file_path)?;
+impl Blob {
+    fn new(contents: String) -> Self {
+        Blob { contents }
+    }
+}
 
-    let prefix = generate_object_prefix(ObjectType::Blob, utils::get_file_size(base_file_path)?);
-    let compressed_data = compression::compress_file(&mut base_file)?;
+impl ChronObject for Blob {
+    fn read_obj_from(_obj_path: &Path) -> Self {
+        Blob {
+            contents: String::new(),
+        }
+    }
 
-    object_file.write_all(&prefix.as_bytes())?;
-    object_file.write_all(&compressed_data)?;
+    fn to_obj_string(&self) -> String {
+        let obj_body = &self.contents;
 
-    Ok(())
+        let obj_len: u64 = self.contents.as_bytes().len().try_into().unwrap();
+        let prefix = Prefix::new(ObjectType::Blob, obj_len).to_string();
+
+        prefix + obj_body
+    }
+}
+
+pub fn create_blob(base_file_path: &Path) -> Result<String> {
+    let base_file_contents = utils::read_file_from_path(base_file_path)?;
+    let blob = Blob::new(base_file_contents);
+    return blob.write_obj();
 }
