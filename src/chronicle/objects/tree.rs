@@ -15,6 +15,7 @@ impl Tree {
 
 impl ChronObject for Tree {
     const OBJ_TYPE: ObjectType = ObjectType::Tree;
+
     fn obj_body(&self) -> String {
         let mut obj_body = String::new();
         for entry in &self.entries {
@@ -32,27 +33,22 @@ impl ChronObject for Tree {
 
 pub struct TreeEntry {
     pub obj_type: ObjectType,
-    pub obj_path: PathBuf,
+    pub obj_name: String,
     pub hash: String,
 }
 
 impl TreeEntry {
-    pub fn new(obj_type: ObjectType, obj_path: PathBuf, hash: String) -> Self {
+    pub fn new(obj_type: ObjectType, obj_name: String, hash: String) -> Self {
         TreeEntry {
             obj_type,
-            obj_path,
+            obj_name,
             hash,
         }
     }
 
     fn to_string(&self) -> String {
-        // Format is: `<obj_type> <path_to_base_file or dir>\0<obj_hash>`
-        self.obj_type.to_string()
-            + " "
-            + &self.obj_path.to_string_lossy()
-            + "\0"
-            + &self.hash
-            + "\n"
+        // Format is: `<obj_type> <name of file or directory>\0<obj_hash>`
+        self.obj_type.to_string() + " " + &self.obj_name + "\0" + &self.hash + "\n"
     }
 }
 

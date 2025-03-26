@@ -1,55 +1,10 @@
 use crate::chronicle::paths;
-
-use anyhow::Result;
 use std::{
     collections::HashSet,
-    fs::{self, DirEntry, File, ReadDir},
-    io::{self, Read},
+    fs::File,
+    io::Read,
     path::{Path, PathBuf},
 };
-
-pub struct FilteredDirIter<'a> {
-    inner: ReadDir,
-    ignored: &'a HashSet<PathBuf>,
-}
-
-impl<'a> FilteredDirIter<'a> {
-    pub fn new(path: &Path) -> Result<Self> {
-        assert!(path.is_dir());
-
-        Ok(FilteredDirIter {
-            inner: fs::read_dir(path)?,
-            ignored: get_ignored_paths(),
-        })
-    }
-}
-
-// TODO: Stop canonicalizing and support a more freeform .chroignore where for example, target/ would
-// ignore ANY paths with target/ in them
-impl<'a> Iterator for FilteredDirIter<'a> {
-    type Item = io::Result<DirEntry>;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        while let Some(entry) = self.inner.next() {
-            match entry {
-                Ok(e) => {
-                    let entry_path = e.path();
-                    // Normalize paths before comparison to avoid situations like when ./target is viewed
-                    // differently than target/
-                    let canonical_path = match entry_path.canonicalize() {
-                        Ok(p) => p,
-                        Err(x) => return Some(Err(x)),
-                    };
-                    if !self.ignored.contains(&canonical_path) {
-                        return Some(Ok(e));
-                    }
-                }
-                Err(x) => return Some(Err(x)),
-            }
-        }
-        None
-    }
-}
 
 fn calc_ignored_paths() -> HashSet<PathBuf> {
     let mut ignored_paths = HashSet::new();
@@ -100,8 +55,8 @@ fn is_invalid_ignore(line: &str) -> bool {
 }
 
 use std::sync::OnceLock;
-static CACHED_RESULT: OnceLock<HashSet<PathBuf>> = OnceLock::new();
+static IGNORED_FILES: OnceLock<HashSet<PathBuf>> = OnceLock::new();
 
 pub fn get_ignored_paths() -> &'static HashSet<PathBuf> {
-    CACHED_RESULT.get_or_init(|| calc_ignored_paths())
+    IGNORED_FILES.get_or_init(|| calc_ignored_paths())
 }

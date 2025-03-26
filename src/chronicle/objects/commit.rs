@@ -1,5 +1,3 @@
-use crate::chronicle::prefix::Prefix;
-
 use super::{ChronObject, ObjectType};
 use anyhow::Result;
 use std::path::Path;
@@ -34,7 +32,7 @@ impl ChronObject for Commit {
     }
 }
 
-fn create_commit_object(tree_hash: String, message: String) -> Result<String> {
+pub fn create_commit_object(tree_hash: String, message: String) -> Result<String> {
     let commit = Commit::new(tree_hash, message);
     commit.write_obj()
 }

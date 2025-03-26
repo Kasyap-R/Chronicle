@@ -1,6 +1,6 @@
 use super::objects::blob;
 use super::{hashing, ignore};
-use crate::chronicle::ignore::FilteredDirIter;
+use crate::chronicle::traversal::FilterUnignoredIter;
 use crate::utils::{self};
 use std::path::Path;
 
@@ -32,7 +32,7 @@ fn stage_files(curr_path: &Path) -> Result<()> {
         curr_path.to_str().unwrap()
     );
 
-    let entries = FilteredDirIter::new(curr_path)?;
+    let entries = FilterUnignoredIter::new(curr_path)?;
     for entry in entries {
         let new_path = entry?.path();
         stage_files(&new_path)?
@@ -42,9 +42,9 @@ fn stage_files(curr_path: &Path) -> Result<()> {
 }
 
 fn stage_file(file_path: &Path) -> Result<()> {
-    let mut entry_map = index::get_index_file_entries()?;
+    let mut entry_map = index::get_index_file_entries().clone();
     let mut computed_hash = None;
-    if index::is_file_in_index(&entry_map, file_path, &mut computed_hash)? {
+    if index::is_file_in_index(file_path, &mut computed_hash)? {
         return Ok(());
     }
 

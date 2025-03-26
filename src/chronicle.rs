@@ -1,5 +1,4 @@
 use crate::args::{Commands, UserArgs};
-use objects::commit;
 
 use anyhow::{Result, anyhow};
 use clap::Parser;
@@ -14,6 +13,7 @@ mod objects;
 pub mod paths;
 mod prefix;
 mod staging;
+pub mod traversal;
 
 pub fn process_command() -> Result<()> {
     let user_args = UserArgs::parse();
@@ -43,6 +43,6 @@ fn ensure_valid_repo_state(user_args: &UserArgs) -> Result<()> {
 }
 
 fn git_repo_exists() -> bool {
-    let path = Path::new(".chronicle/");
+    let path = Path::new(paths::CHRON_DIR_PATH);
     return path.exists();
 }

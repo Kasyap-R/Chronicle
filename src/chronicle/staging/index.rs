@@ -8,10 +8,11 @@ use std::{
     fs::{self, File, OpenOptions},
     io::{Read, Seek, SeekFrom, Write},
     path::{Path, PathBuf},
+    sync::OnceLock,
     time::SystemTime,
 };
 
-#[derive(Serialize, Deserialize, PartialEq)]
+#[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub struct IndexEntry {
     pub last_modified: SystemTime,
     pub hash: String,
@@ -36,16 +37,13 @@ impl IndexEntry {
     }
 }
 
-pub fn is_file_in_index(
-    entry_map: &HashMap<PathBuf, IndexEntry>,
-    file_path: &Path,
-    computed_hash: &mut Option<String>,
-) -> Result<bool> {
-    if !entry_map.contains_key(file_path) {
+pub fn is_file_in_index(file_path: &Path, computed_hash: &mut Option<String>) -> Result<bool> {
+    let idx_entries = get_index_file_entries();
+    if !idx_entries.contains_key(file_path) {
         return Ok(false);
     }
 
-    let entry = entry_map.get(file_path).unwrap();
+    let entry = idx_entries.get(file_path).unwrap();
     let last_modified = utils::get_last_modified(file_path)?;
     if entry.last_modified == last_modified {
         return Ok(true);
@@ -69,7 +67,17 @@ pub fn update_index(entry_map: &HashMap<PathBuf, IndexEntry>) -> Result<()> {
     Ok(())
 }
 
-pub fn get_index_file_entries() -> Result<HashMap<PathBuf, IndexEntry>> {
+pub fn get_staged_hashes() -> Result<HashMap<PathBuf, String>> {
+    let entries = get_index_file_entries().clone();
+    let mut hashes = HashMap::new();
+    entries.into_iter().for_each(|(file_path, entry)| {
+        hashes.insert(file_path, entry.hash);
+    });
+
+    Ok(hashes)
+}
+
+fn calc_index_entries() -> Result<HashMap<PathBuf, IndexEntry>> {
     let mut idx_file = File::open(paths::INDEX_PATH)?;
     let mut idx_file_contents = String::new();
     idx_file.read_to_string(&mut idx_file_contents)?;
@@ -78,12 +86,8 @@ pub fn get_index_file_entries() -> Result<HashMap<PathBuf, IndexEntry>> {
     Ok(entry_map)
 }
 
-pub fn get_staged_hashes() -> Result<HashMap<PathBuf, String>> {
-    let entries = get_index_file_entries()?;
-    let mut hashes: HashMap<PathBuf, String> = HashMap::new();
-    entries.into_iter().for_each(|(file_path, entry)| {
-        hashes.insert(file_path, entry.hash);
-    });
+static INDEX_ENTRIES: OnceLock<HashMap<PathBuf, IndexEntry>> = OnceLock::new();
 
-    Ok(hashes)
+pub fn get_index_file_entries() -> &'static HashMap<PathBuf, IndexEntry> {
+    INDEX_ENTRIES.get_or_init(|| calc_index_entries().expect("Failed to read index file entries"))
 }
