@@ -37,7 +37,7 @@ impl IndexEntry {
     }
 }
 
-pub fn is_file_in_index(file_path: &Path, computed_hash: &mut Option<String>) -> Result<bool> {
+pub fn is_file_in_index(file_path: &Path) -> Result<bool> {
     let idx_entries = get_index_file_entries();
     if !idx_entries.contains_key(file_path) {
         return Ok(false);
@@ -52,7 +52,6 @@ pub fn is_file_in_index(file_path: &Path, computed_hash: &mut Option<String>) ->
     // Its possible that even though the file was edited, the hash is the same (e.g. a change was
     // made then reverted)
     let hash = hashing::hash_file(file_path)?;
-    *computed_hash = Some(hash.clone());
     Ok(hash == entry.hash)
 }
 

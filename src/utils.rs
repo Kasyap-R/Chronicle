@@ -16,7 +16,7 @@ pub fn get_last_modified(path: &Path) -> Result<SystemTime> {
     Ok(metadata.modified()?)
 }
 
-pub fn read_file_from_path(path: &Path) -> Result<String> {
+pub fn read_raw_file(path: &Path) -> Result<String> {
     let mut obj_file = File::open(path)?;
     let mut file_contents = String::new();
     obj_file.read_to_string(&mut file_contents)?;

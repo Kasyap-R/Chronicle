@@ -4,16 +4,19 @@ use anyhow::{Result, anyhow};
 use clap::Parser;
 use std::path::Path;
 
+pub mod paths;
+pub mod traversal;
+
+mod cat;
 mod commits;
 mod compression;
 mod hashing;
 mod ignore;
 mod initialize;
 mod objects;
-pub mod paths;
 mod prefix;
+mod refs;
 mod staging;
-pub mod traversal;
 
 pub fn process_command() -> Result<()> {
     let user_args = UserArgs::parse();
@@ -25,6 +28,7 @@ pub fn process_command() -> Result<()> {
         Commands::Add { path } => staging::handle_staging(&path)?,
         Commands::Commit { message } => commits::handle_commit(message)?,
         Commands::Branch(_branch_commands) => (),
+        Commands::Cat { hash } => cat::print_obj_file(hash)?,
     }
 
     Ok(())

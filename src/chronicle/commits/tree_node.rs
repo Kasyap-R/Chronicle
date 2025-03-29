@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+#[derive(PartialEq, Debug)]
 pub struct TreeNode {
     pub files: HashMap<String, String>,
     pub subdirs: HashMap<String, TreeNode>,

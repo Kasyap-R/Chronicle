@@ -1,7 +1,7 @@
 use super::{ChronObject, ObjectType};
 
 use anyhow::Result;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 struct Tree {
     entries: Vec<TreeEntry>,
@@ -54,5 +54,5 @@ impl TreeEntry {
 
 pub fn create_tree_object(tree_entries: Vec<TreeEntry>) -> Result<String> {
     let tree = Tree::new(tree_entries);
-    return tree.write_obj();
+    tree.write_obj()
 }

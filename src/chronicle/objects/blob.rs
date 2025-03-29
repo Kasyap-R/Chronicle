@@ -27,7 +27,7 @@ impl ChronObject for Blob {
 }
 
 pub fn create_blob(base_file_path: &Path) -> Result<String> {
-    let base_file_contents = utils::read_file_from_path(base_file_path)?;
+    let base_file_contents = utils::read_raw_file(base_file_path)?;
     let blob = Blob::new(base_file_contents);
-    return blob.write_obj();
+    blob.write_obj()
 }

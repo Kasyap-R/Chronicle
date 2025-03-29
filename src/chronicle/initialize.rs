@@ -28,14 +28,13 @@ fn init_config() -> Result<()> {
 fn init_refs() -> Result<()> {
     fs::create_dir(paths::REFS_PATH)?;
     fs::create_dir(paths::HEADS_PATH)?;
-    fs::create_dir(paths::REMOTES_PATH)?;
     fs::create_dir(paths::TAGS_PATH)?;
     Ok(())
 }
 
 fn init_head() -> Result<()> {
     let mut file = File::create(paths::HEAD_PATH)?;
-    file.write_all(b"ref: refs/heads/main")?;
+    file.write_all(b".chronicle/refs/heads/main")?;
     Ok(())
 }
 

@@ -1,5 +1,5 @@
+use super::ignore;
 use super::objects::blob;
-use super::{hashing, ignore};
 use crate::chronicle::traversal::FilterUnignoredIter;
 use crate::utils::{self};
 use std::path::Path;
@@ -43,18 +43,17 @@ fn stage_files(curr_path: &Path) -> Result<()> {
 
 fn stage_file(file_path: &Path) -> Result<()> {
     let mut entry_map = index::get_index_file_entries().clone();
-    let mut computed_hash = None;
-    if index::is_file_in_index(file_path, &mut computed_hash)? {
+    // TODO: This function doesn't work because it doesn't account for the fact that the blob hash
+    // was made with the the prefix whereas the base file path won't have the prefix
+    if index::is_file_in_index(file_path)? {
         return Ok(());
     }
 
-    // Ensure the hash is only ever computed once
-    let computed_hash = computed_hash.unwrap_or(hashing::hash_file(file_path)?);
-
-    let entry = IndexEntry::create_index_entry(file_path, &computed_hash)?;
+    let blob_hash = blob::create_blob(file_path)?;
+    let entry = IndexEntry::create_index_entry(file_path, &blob_hash)?;
     entry_map.insert(file_path.to_path_buf(), entry);
 
     index::update_index(&entry_map)?;
-    blob::create_blob(file_path)?;
+
     Ok(())
 }
