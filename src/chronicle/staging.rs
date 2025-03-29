@@ -1,112 +1,59 @@
-use std::{
-    collections::HashSet,
-    fs::{self, File, OpenOptions},
-    io::{Read, Seek, SeekFrom, Write},
-    path::{Path, PathBuf},
-};
+use super::ignore;
+use super::objects::blob;
+use crate::chronicle::traversal::FilterUnignoredIter;
+use crate::utils::{self};
+use std::path::Path;
 
-use anyhow::{Context, Result};
+use anyhow::Result;
 use index::IndexEntry;
 
-use crate::utils;
-
-use super::objects::blob;
-use super::{hashing, paths};
-
-mod index;
+pub mod index;
 
 // TODO: add support for git rm (which just removes files from the index)
-// TODO: Stop normalizing and support a more freeform .chroignore where for example, target/ would
-// ignore ANY paths with target/ in them
+
+// TODO: Make this func less jank, there needs to be a cleaner way to avoid adding at all if the
+// path the user passed is ignored
 pub fn handle_staging(path: &Path) -> Result<()> {
-    let ignored_paths = utils::get_ignored_paths()?;
-    // Normalize paths before comparison to avoid situations like when ./target is viewed
-    // differently than target/
-    if ignored_paths.contains(&path.canonicalize()?) {
+    if ignore::get_ignored_paths().contains(&path.canonicalize()?) {
         return Ok(());
     }
-
-    if fs::metadata(path)?.is_file() {
-        stage_file(&path)?;
-    } else {
-        stage_directory(path, &ignored_paths)?;
-    }
-
+    stage_files(&path)?;
     Ok(())
 }
 
-fn stage_directory(dir_path: &Path, ignored: &HashSet<PathBuf>) -> Result<()> {
-    println!("Staging files in directory: {}", dir_path.to_str().unwrap());
-    let entries = fs::read_dir(dir_path)?;
-    for entry in entries.flatten() {
-        let path = entry.path();
-        if ignored.contains(&path.canonicalize()?) {
-            continue;
-        }
-
-        if path.is_dir() {
-            stage_directory(&path, ignored)?;
-        } else {
-            stage_file(&path)?;
-        }
+fn stage_files(curr_path: &Path) -> Result<()> {
+    if curr_path.is_file() {
+        stage_file(&curr_path)?;
+        return Ok(());
     }
+
+    println!(
+        "Staging files in directory: {}",
+        curr_path.to_str().unwrap()
+    );
+
+    let entries = FilterUnignoredIter::new(curr_path)?;
+    for entry in entries {
+        let new_path = entry?.path();
+        stage_files(&new_path)?
+    }
+
     Ok(())
 }
 
 fn stage_file(file_path: &Path) -> Result<()> {
-    let mut file = File::open(file_path)?;
-    let metadata = fs::metadata(file_path)?;
-
-    let file_size = utils::get_file_size(file_path)?;
-    let last_modified = metadata.modified()?;
-    let hash = hashing::get_file_hash(&mut file).context(format!(
-        "Failed to get hash for the following file while staging: {}",
-        file_path
-            .to_str()
-            .unwrap_or("Failed to retrieve file path.")
-    ))?;
-
-    blob::create_blob(file_path, &hash)?;
-
-    update_index(IndexEntry::new(
-        file_path.to_path_buf(),
-        hash,
-        file_size,
-        last_modified,
-    ))?;
-
-    Ok(())
-}
-
-fn update_index(entry: IndexEntry) -> Result<()> {
-    let mut index_file = OpenOptions::new()
-        .read(true)
-        .write(true)
-        .open(paths::INDEX_PATH)?;
-
-    let mut idx_file_contents = String::new();
-    index_file.read_to_string(&mut idx_file_contents)?;
-
-    let mut entries: Vec<IndexEntry> =
-        serde_json::from_str(&idx_file_contents).unwrap_or_else(|_| Vec::new());
-
-    update_index_entries(&mut entries, entry);
-    write_entries_to_index(&entries, &mut index_file)?;
-    Ok(())
-}
-
-fn update_index_entries(entries: &mut Vec<IndexEntry>, entry: IndexEntry) {
-    if let Some(idx) = entry.in_vec(entries) {
-        entries[idx] = entry;
-    } else {
-        entries.push(entry);
+    let mut entry_map = index::get_index_file_entries().clone();
+    // TODO: This function doesn't work because it doesn't account for the fact that the blob hash
+    // was made with the the prefix whereas the base file path won't have the prefix
+    if index::is_file_in_index(file_path)? {
+        return Ok(());
     }
-}
 
-fn write_entries_to_index(entries: &Vec<IndexEntry>, index_file: &mut File) -> Result<()> {
-    let json_string = serde_json::to_string_pretty(&entries)?;
-    index_file.set_len(0).context("Failed to clear file")?;
-    index_file.seek(SeekFrom::Start(0))?; // Move cursor to start
-    index_file.write_all(json_string.as_bytes())?;
+    let blob_hash = blob::create_blob(file_path)?;
+    let entry = IndexEntry::create_index_entry(file_path, &blob_hash)?;
+    entry_map.insert(file_path.to_path_buf(), entry);
+
+    index::update_index(&entry_map)?;
+
     Ok(())
 }

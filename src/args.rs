@@ -29,6 +29,9 @@ pub enum Commands {
     },
     /// Manage branches
     Branch(BranchCommands),
+    /// Prints out a decompressed version of a object file
+    #[command(name = "cat-file")]
+    Cat { hash: String },
 }
 
 #[derive(Args)]

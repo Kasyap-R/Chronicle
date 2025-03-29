@@ -1,33 +1,33 @@
-use crate::chronicle::compression;
-
 use super::*;
 use anyhow::Result;
-use std::{
-    fs::{self, File},
-    io::Write,
-    path::Path,
-};
+use std::path::Path;
 
-pub fn create_blob(base_file_path: &Path, hash: &str) -> Result<()> {
-    if !object_exists(&hash) {
-        let (directory_path, file_path) = get_object_paths(&hash);
-        if !directory_path.exists() {
-            fs::create_dir(directory_path)?;
-        }
-        write_blob(base_file_path, &file_path)?;
-    }
-
-    Ok(())
+struct Blob {
+    contents: String,
 }
 
-fn write_blob(base_file_path: &Path, object_file_path: &Path) -> Result<()> {
-    let mut object_file = File::create_new(object_file_path)?;
-    let mut base_file = File::open(base_file_path)?;
+impl Blob {
+    fn new(contents: String) -> Self {
+        Blob { contents }
+    }
+}
 
-    let prefix = generate_object_prefix(&ObjectType::Blob, utils::get_file_size(base_file_path)?);
-    let compressed_data = compression::compress_file(&mut base_file)?;
+impl ChronObject for Blob {
+    const OBJ_TYPE: ObjectType = ObjectType::Blob;
 
-    object_file.write_all(&prefix)?;
-    object_file.write_all(&compressed_data)?;
-    Ok(())
+    fn read_obj_from(_obj_path: &Path) -> Self {
+        Blob {
+            contents: String::new(),
+        }
+    }
+
+    fn obj_body(&self) -> String {
+        self.contents.clone()
+    }
+}
+
+pub fn create_blob(base_file_path: &Path) -> Result<String> {
+    let base_file_contents = utils::read_raw_file(base_file_path)?;
+    let blob = Blob::new(base_file_contents);
+    blob.write_obj()
 }

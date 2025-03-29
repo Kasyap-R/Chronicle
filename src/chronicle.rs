@@ -1,15 +1,21 @@
 use crate::args::{Commands, UserArgs};
-use objects::commit;
 
 use anyhow::{Result, anyhow};
 use clap::Parser;
 use std::path::Path;
 
+pub mod paths;
+pub mod traversal;
+
+mod cat;
+mod commits;
 mod compression;
 mod hashing;
+mod ignore;
 mod initialize;
 mod objects;
-pub mod paths;
+mod prefix;
+mod refs;
 mod staging;
 
 pub fn process_command() -> Result<()> {
@@ -17,12 +23,12 @@ pub fn process_command() -> Result<()> {
 
     ensure_valid_repo_state(&user_args)?;
 
-    // Always canonicalize paths before using as args
     match user_args.command {
         Commands::Init => initialize::init_chronicle_repo()?,
         Commands::Add { path } => staging::handle_staging(&path)?,
-        Commands::Commit { message } => commit::create_commit(message)?,
+        Commands::Commit { message } => commits::handle_commit(message)?,
         Commands::Branch(_branch_commands) => (),
+        Commands::Cat { hash } => cat::print_obj_file(hash)?,
     }
 
     Ok(())
@@ -41,6 +47,6 @@ fn ensure_valid_repo_state(user_args: &UserArgs) -> Result<()> {
 }
 
 fn git_repo_exists() -> bool {
-    let path = Path::new(".chronicle/");
+    let path = Path::new(paths::CHRON_DIR_PATH);
     return path.exists();
 }
